@@ -1,0 +1,39 @@
+name: synchronize
+
+on:
+  repository_dispatch:
+    types:
+      - synchronize
+
+jobs:
+  pull:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Echo message
+        run: echo ${{ github.event.client_payload.message }}
+
+      - name: Clone
+        run: git clone git@github.com:navigarejs/framework.git /tmp/framework
+
+      - name: Copy Laravel package
+        run: mv -v /tmp/framework/packages/laravel/* .
+
+      - name: List files
+        run: ls
+
+      - name: Add changes
+        run: git add -A
+
+      - name: Commit changes
+        run: git commit -m "${{ github.event.client_payload.message }}"
+
+      - name: Push back changes
+        run: git push --force
+
+        
