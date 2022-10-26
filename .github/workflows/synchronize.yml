@@ -19,7 +19,7 @@ jobs:
         run: echo ${{ github.event.client_payload.message }}
 
       - name: Clone
-        run: git clone git@github.com:navigarejs/framework.git /tmp/framework
+        run: git clone https://github.com/navigarejs/framework.git /tmp/framework
 
       - name: Copy Laravel package
         run: mv -v /tmp/framework/packages/laravel/* .
