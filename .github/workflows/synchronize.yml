@@ -45,6 +45,19 @@ jobs:
       - name: Copy Laravel package
         run: mv -v /tmp/framework/packages/laravel/* .
 
+      - name: Read version
+        run: |
+          version=$(jq -r ".version" package.json)
+          echo "VERSION=${version}" >> $GITHUB_ENV
+
+      - name: Set version
+        run: |
+          content=$(jq -r ".version=${{ env.VERSION }}" composer.json
+          echo -E "${content}" > composer.json
+
+      - name: Delete package.json
+        run: rm package.json
+
       - name: Add changes
         run: git add -A
 
