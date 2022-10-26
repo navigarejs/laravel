@@ -57,7 +57,7 @@ jobs:
           echo "MESSAGE=chore(release): v${{ env.VERSION }} [skip ci]" >> $GITHUB_ENV
 
       - name: Commit changes
-        run: git commit -m "${{ env.MESSAGE }}"
+        run: git commit -m "${{ env.MESSAGE }}" || true
 
       - name: Tag change
         run: git tag -a "v${{ env.VERSION }}" -m "v${{ env.VERSION }}"
