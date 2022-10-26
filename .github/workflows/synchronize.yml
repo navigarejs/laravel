@@ -30,15 +30,6 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-      - name: Set default message
-        run: |
-          echo "MESSAGE=chore(release): manual synchronization [skip ci]" >> $GITHUB_ENV
-
-      - name: Set message
-        if: "${{ github.event.client_payload.version != '' }}"
-        run: |
-          echo "MESSAGE=chore(release): ${{ github.event.client_payload.version }} [skip ci]" >> $GITHUB_ENV
-
       - name: Clone
         run: git clone https://github.com/navigarejs/framework.git /tmp/framework
 
@@ -61,12 +52,15 @@ jobs:
       - name: Add changes
         run: git add -A
 
+      - name: Set message
+        run: |
+          echo "MESSAGE=chore(release): ${{ env.VERSION }} [skip ci]" >> $GITHUB_ENV
+
       - name: Commit changes
         run: git commit -m "${{ env.MESSAGE }}"
 
       - name: Tag change
-        if: "${{ github.event.client_payload.version != '' }}"
-        run: git tag -a ${{ github.event.client_payload.version }} -m "${{ github.event.client_payload.version }}"
+        run: git tag -a ${{ env.VERSION }} -m "${{ env.VERSION }}"
 
       - name: Push back changes
         run: git push --force
