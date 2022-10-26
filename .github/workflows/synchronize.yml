@@ -16,9 +16,9 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Clean old files
+      - name: Clean old files except for .github folder
         run: |
-          git rm -rf .
+          git rm \* ':!.github'
           git clean -fxd
 
       - name: List files
@@ -33,7 +33,7 @@ jobs:
       - name: Set message
         id: message
         run: |
-          MESSAGE="${{ github.event.client_payload.message }}"
+          MESSAGE="chore(release): ${{ github.event.client_payload.version }} [skip ci]"
           DEFAULT_MESSAGE="chore(release): manual synchronization [skip ci]"
           echo "value=${MESSAGE:-${DEFAULT_MESSAGE}}" >> $GITHUB_OUTPUT
 
@@ -48,6 +48,10 @@ jobs:
 
       - name: Commit changes
         run: git commit -m "${{ steps.message.outputs.value }}"
+
+      - name: Tag change
+        if: ${{ github.event.client_payload.version }} !== ''
+        run: git tag -a ${{ github.event.client_payload.version }}
 
       - name: Push back changes
         run: git push --force
