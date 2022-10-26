@@ -34,9 +34,6 @@ jobs:
       - name: Copy Laravel package
         run: mv -v /tmp/framework/packages/laravel/* .
 
-      - name: List files
-        run: ls
-
       - name: Add changes
         run: git add -A
 
