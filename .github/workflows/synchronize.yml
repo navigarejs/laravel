@@ -34,6 +34,11 @@ jobs:
       - name: Copy Laravel package
         run: mv -v /tmp/framework/packages/laravel/* .
 
+      - name: Clean old files
+        run: |
+          git rm -rf .
+          git clean -fxd
+
       - name: Add changes
         run: git add -A
 
