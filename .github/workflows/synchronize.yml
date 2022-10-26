@@ -51,7 +51,7 @@ jobs:
 
       - name: Tag change
         if: ${{ github.event.client_payload.version }} !== ''
-        run: git tag -a ${{ github.event.client_payload.version }}
+        run: git tag -a ${{ github.event.client_payload.version }} -m "${{ github.event.client_payload.version }}"
 
       - name: Push back changes
         run: git push --force
