@@ -54,13 +54,13 @@ jobs:
 
       - name: Set message
         run: |
-          echo "MESSAGE=chore(release): ${{ env.VERSION }} [skip ci]" >> $GITHUB_ENV
+          echo "MESSAGE=chore(release): v${{ env.VERSION }} [skip ci]" >> $GITHUB_ENV
 
       - name: Commit changes
         run: git commit -m "${{ env.MESSAGE }}"
 
       - name: Tag change
-        run: git tag -a ${{ env.VERSION }} -m "${{ env.VERSION }}"
+        run: git tag -a "v${{ env.VERSION }}" -m "v${{ env.VERSION }}"
 
       - name: Push back changes
         run: git push --force
