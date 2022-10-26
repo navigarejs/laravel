@@ -1,0 +1,24 @@
+name: release
+
+on:
+  workflow_dispatch:
+  workflow_run:
+    workflows:
+      - synchronize
+    types:
+      - completed
+
+jobs:
+  release:
+    # Change to ubuntu-latest once it points to ^22.x
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Call webhook
+        run: |
+          curl \
+            -X POST \
+            -H 'content-type:application/json' \
+            -d '{ "repository": { "url":"https://packagist.org/packages/navigare/laravel" } }' \
+            --fail-with-body \
+            'https://packagist.org/api/update-package?username=jaulz&apiToken=${{ secrets.PACKAGIST_TOKEN }}'

@@ -1,0 +1,55 @@
+name: synchronize
+
+on:
+  workflow_dispatch:
+  repository_dispatch:
+    types:
+      - synchronize
+
+jobs:
+  pull:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Clean old files
+        run: |
+          git rm -rf .
+          git clean -fxd
+
+      - name: List files
+        run: |
+          ls
+      
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Set message
+        id: message
+        run: |
+          MESSAGE="${{ github.event.client_payload.message }}"
+          DEFAULT_MESSAGE="chore(release): manual synchronization [skip ci]"
+          echo "value=${MESSAGE:-${DEFAULT_MESSAGE}}" >> $GITHUB_OUTPUT
+
+      - name: Clone
+        run: git clone https://github.com/navigarejs/framework.git /tmp/framework
+
+      - name: Copy Laravel package
+        run: mv -v /tmp/framework/packages/laravel/* .
+
+      - name: Add changes
+        run: git add -A
+
+      - name: Commit changes
+        run: git commit -m "${{ steps.message.outputs.value }}"
+
+      - name: Push back changes
+        run: git push --force
+
+        
