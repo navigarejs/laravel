@@ -21,8 +21,11 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-      - name: Echo message
-        run: echo ${{ github.event.client_payload.message }}
+      - name: Set message
+        id: message
+        run: |
+          MESSAGE=${{ github.event.client_payload.message }}
+          echo "{value}=${MESSAGE:-"chore(release): manual synchronization [skip ci]"}" >> $GITHUB_OUTPUT
 
       - name: Clone
         run: git clone https://github.com/navigarejs/framework.git /tmp/framework
@@ -37,7 +40,7 @@ jobs:
         run: git add -A
 
       - name: Commit changes
-        run: git commit -m "${{ github.event.client_payload.message }}"
+        run: git commit -m "${{ steps.message.outputs.value}}"
 
       - name: Push back changes
         run: git push --force
