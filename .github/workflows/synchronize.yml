@@ -50,7 +50,7 @@ jobs:
         run: git commit -m "${{ steps.message.outputs.value }}"
 
       - name: Tag change
-        if: ${{ github.event.client_payload.version }} !== ''
+        if: "${{ github.event.client_payload.version != '' }}"
         run: git tag -a ${{ github.event.client_payload.version }} -m "${{ github.event.client_payload.version }}"
 
       - name: Push back changes
