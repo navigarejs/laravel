@@ -25,7 +25,8 @@ jobs:
         id: message
         run: |
           MESSAGE=${{ github.event.client_payload.message }}
-          echo "{value}=${MESSAGE:-"chore(release): manual synchronization [skip ci]"}" >> $GITHUB_OUTPUT
+          DEFAULT_MESSAGE="chore(release): manual synchronization [skip ci]"
+          echo "{value}=${MESSAGE:-${DEFAULT_MESSAGE}}" >> $GITHUB_OUTPUT
 
       - name: Clone
         run: git clone https://github.com/navigarejs/framework.git /tmp/framework
