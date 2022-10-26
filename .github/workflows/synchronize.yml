@@ -52,7 +52,7 @@ jobs:
 
       - name: Set version
         run: |
-          content=$(jq -r ".version=${{ env.VERSION }}" composer.json
+          content=$(jq -r ".version=${{ env.VERSION }}" composer.json)
           echo -E "${content}" > composer.json
 
       - name: Delete package.json
