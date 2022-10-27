@@ -35,7 +35,7 @@ jobs:
       - name: Delete obsolete files
         run: |
           rm package.json
-          rm release.config.js
+          rm release.config.cjs
 
       - name: Read version
         run: |
