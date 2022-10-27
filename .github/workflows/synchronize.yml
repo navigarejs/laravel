@@ -20,10 +20,6 @@ jobs:
         run: |
           git rm \* ':!.github'
           git clean -fxd
-
-      - name: List files
-        run: |
-          ls
       
       - name: Configure git
         run: |
@@ -36,18 +32,15 @@ jobs:
       - name: Copy Laravel package
         run: mv -v /tmp/framework/packages/laravel/* .
 
+      - name: Delete obsolete files
+        run: |
+          rm package.json
+          rm release.config.js
+
       - name: Read version
         run: |
-          version=$(jq -r ".version" package.json)
+          version=$(jq -r ".version" composer.json)
           echo "VERSION=${version}" >> $GITHUB_ENV
-
-      - name: Set version
-        run: |
-          content=$(jq -r ".version=\"${{ env.VERSION }}\"" composer.json)
-          echo -E "${content}" > composer.json
-
-      - name: Delete package.json
-        run: rm package.json
 
       - name: Add changes
         run: git add -A
