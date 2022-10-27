@@ -56,6 +56,8 @@ jobs:
         run: git tag -a "v${{ env.VERSION }}" -m "v${{ env.VERSION }}"
 
       - name: Push back changes
-        run: git push --force --tags
+        run: |
+          git push --force --tags
+          git push --force
 
         
