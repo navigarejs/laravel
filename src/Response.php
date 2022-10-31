@@ -44,7 +44,7 @@ class Response implements Responsable
   /**
    * @param  string  $fragmentName
    * @param  string  $component
-   * @param  Collection  $props
+   * @param  Collection  $properties
    * @param  string  $rootView
    * @param  ?string  $baseURL
    * @param  string  $version
@@ -54,14 +54,14 @@ class Response implements Responsable
   public function __construct(
     string $fragmentName,
     string $component,
-    Collection $props,
+    Collection $properties,
     string $rootView = 'app',
     ?string $baseURL = null,
     string $version = '',
     Collection $shared,
     array $extensions = []
   ) {
-    $this->addFragment($fragmentName, $component, $props);
+    $this->withFragment($fragmentName, $component, $properties);
     $this->rootView = $rootView;
     $this->baseURL = $baseURL;
     $this->version = $version;
@@ -87,28 +87,6 @@ class Response implements Responsable
   }
 
   /**
-   * Add new fragment to response.
-   *
-   * @param  string  $fragmentName
-   * @param  string  $component
-   * @param  array|Arrayable  $props
-   * @return self
-   */
-  public function addFragment(
-    string $fragmentName = 'default',
-    string $component,
-    array|Arrayable $props
-  ): self {
-    $this->fragments[$fragmentName] = new Fragment(
-      $fragmentName,
-      $component,
-      collect($props)
-    );
-
-    return $this;
-  }
-
-  /**
    * @param  string|array  $key
    * @param  mixed|null  $value
    * @param  string  $fragmentName
@@ -120,13 +98,35 @@ class Response implements Responsable
     string $fragmentName = 'default'
   ): self {
     $fragment = $this->getFragment($fragmentName);
-    $props = $fragment->props;
+    $properties = $fragment->properties;
 
     if (is_array($key)) {
-      $fragment->props->merge($key);
+      $fragment->properties->merge($key);
     } else {
-      $fragment->props->put($key, $value);
+      $fragment->properties->put($key, $value);
     }
+
+    return $this;
+  }
+
+  /**
+   * Add new fragment to response.
+   *
+   * @param  string  $fragmentName
+   * @param  string  $component
+   * @param  array|Arrayable  $properties
+   * @return self
+   */
+  public function withFragment(
+    string $fragmentName = 'default',
+    string $component,
+    array|Arrayable $properties
+  ): self {
+    $this->fragments[$fragmentName] = new PageFragment(
+      name: $fragmentName,
+      component: $component,
+      properties: collect($properties)
+    );
 
     return $this;
   }
@@ -150,22 +150,10 @@ class Response implements Responsable
   /**
    * Set root view (i.e. the blade component) for the Navigare response.
    *
-   * @deprecated
    * @param string $rootView
    * @return Response
    */
   public function rootView(string $rootView): self
-  {
-    return $this->setRootView($rootView);
-  }
-
-  /**
-   * Set root view (i.e. the blade component) for the Navigare response.
-   *
-   * @param string $rootView
-   * @return Response
-   */
-  public function setRootView(string $rootView): self
   {
     $this->rootView = $rootView;
 
@@ -173,12 +161,12 @@ class Response implements Responsable
   }
 
   /**
-   * Set base URL of page (i.e. for modals the page that is in the background).
+   * Extend a base page (i.e. for modals the page that is in the background).
    *
-   * @param string $rootView
+   * @param string $baseURL
    * @return Response
    */
-  public function setBaseURL(string $baseURL): self
+  public function extends(string $baseURL): self
   {
     $this->baseURL = $baseURL;
 
@@ -191,7 +179,7 @@ class Response implements Responsable
    * @param string $layout
    * @return Response
    */
-  public function setLayout(string $layout): self
+  public function layout(string $layout): self
   {
     $this->layout = $layout;
 
@@ -212,9 +200,9 @@ class Response implements Responsable
     }
 
     // Prepare page
-    $rawRoute = RawRoutes::get($request->route());
+    $rawRoute = RawRoute::fromRoute($request->route());
 
-    $location = $this->getLocation($request);
+    $location = Location::fromRequest($request);
 
     $defaults = $this->getDefaults();
 
@@ -222,104 +210,79 @@ class Response implements Responsable
       $value,
       $name
     ) use ($rawRoute) {
-      return isset($rawRoute['bindings'][$name]);
+      return isset($rawRoute->bindings[$name]);
     });
 
-    // Parse "props" header into readable format
-    $selectedProps = collect(
-      explode(',', $request->header('X-Navigare-Props', ''))
+    // Parse "properties" header into readable format
+    $selectedProperties = collect(
+      explode(',', $request->header('X-Navigare-Properties', ''))
     )
       ->filter()
-      ->map(function ($prop) {
-        if (Str::contains($prop, '/')) {
-          [$fragmentName, $prop] = explode('/', $prop);
-
-          return [
-            'fragmentName' => $fragmentName,
-            'name' => $prop,
-          ];
-        }
-
-        return [
-          'fragmentName' => 'default',
-          'name' => $prop,
-        ];
+      ->map(function ($property) {
+        return SelectedProperty::fromString($property);
       });
     $selectedFragmentNames =
-      $selectedProps->count() > 0
-        ? collect($selectedProps)
+      $selectedProperties->count() > 0
+        ? collect($selectedProperties)
           ->map(function ($selectedProp) {
-            return $selectedProp['fragmentName'];
+            return $selectedProp->fragmentName;
           })
           ->unique()
         : collect(array_keys($this->fragments));
 
-    // Prepare fragments and their props
+    // Prepare fragments and their properties
     $fragments = collect($this->fragments)
       ->filter(function ($fragment) use ($selectedFragmentNames) {
         return $selectedFragmentNames->contains($fragment->name);
       })
       ->map(function ($fragment) use (
-        $selectedProps,
+        $selectedProperties,
         $request,
         $rawRoute,
         $location,
         $defaults,
         $parameters
       ) {
-        $props = collect(
-          $selectedProps->count() > 0
-            ? $fragment->props->only(
-              $selectedProps
-                ->filter(function ($selectedProp) use ($fragment) {
-                  return $selectedProp['fragmentName'] === $fragment->name;
+        $properties = collect(
+          $selectedProperties->count() > 0
+            ? $fragment->properties->only(
+              $selectedProperties
+                ->filter(function ($selectedProperty) use ($fragment) {
+                  return $selectedProperty->fragmentName === $fragment->name;
                 })
-                ->map(function ($selectedProp) {
-                  return $selectedProp['name'];
+                ->map(function ($selectedProperty) {
+                  return $selectedProperty->name;
                 })
             )
-            : $fragment->props->filter(function ($prop) {
-              return !($prop instanceof LazyProp);
+            : $fragment->properties->filter(function ($property) {
+              return !($property instanceof LazyProp);
             })
         );
 
-        return collect([
-          'component' => $fragment->component,
+        $fragment->properties = $this->resolvePropertyInstances(
+          $request,
+          $fragment->properties
+        );
+        $fragment->rawRoute = $rawRoute;
+        $fragment->location = $location;
+        $fragment->defaults = $defaults;
+        $fragment->parameters = $parameters;
 
-          'props' => $this->resolvePropertyInstances($request, $props),
-
-          'rawRoute' => $rawRoute,
-
-          'location' => $location,
-
-          'defaults' => $defaults,
-
-          'parameters' => $parameters,
-        ]);
+        return $fragment;
       });
 
     // Collect all information for page
-    $page = collect([
-      'fragments' => $fragments,
-
-      'props' => $this->resolvePropertyInstances($request, $this->shared),
-
-      'layout' => $this->layout,
-
-      'version' => $this->version,
-
-      'rawRoute' => $rawRoute,
-
-      'location' => $location,
-
-      'defaults' => $defaults,
-
-      'parameters' => $parameters,
-
-      'csrf' => csrf_token(),
-
-      'timestamp' => Carbon::now()->timestamp,
-    ]);
+    $page = new Page(
+      rawRoute: $rawRoute,
+      fragments: $fragments,
+      properties: $this->resolvePropertyInstances($request, $this->shared),
+      layout: $this->layout,
+      version: $this->version,
+      location: $location,
+      defaults: $defaults,
+      parameters: $parameters,
+      csrf: csrf_token()
+    );
 
     // If the request was triggered by Navigare itself, we return the response
     // in JSON format
@@ -331,10 +294,7 @@ class Response implements Responsable
     if ($this->baseURL) {
       $basePage = $this->getBasePage($request);
 
-      $page->put(
-        'fragments',
-        $basePage->get('fragments')->merge($page['fragments'])
-      );
+      $page->mergeFragments($basePage->fragments);
     }
 
     return ResponseFactory::view(
@@ -355,7 +315,7 @@ class Response implements Responsable
   public function __call($method, $arguments): self
   {
     if (isset($arguments[0]) && is_string($arguments[0])) {
-      $this->addFragment($method, $arguments[0], $arguments[1] ?? []);
+      $this->withFragment($method, $arguments[0], $arguments[1] ?? []);
 
       return $this;
     }
@@ -405,58 +365,29 @@ class Response implements Responsable
    * Return array of all the defaults that were set before.
    *
    * @param  \Illuminate\Http\Request  $request
-   * @return array
+   * @return Collection
    */
-  public function getDefaults(): array
+  public function getDefaults(): Collection
   {
     if (method_exists(app('url'), 'getDefaultParameters')) {
-      return app('url')->getDefaultParameters();
+      return collect(app('url')->getDefaultParameters());
     }
 
-    return [];
+    return collect([]);
   }
 
   /**
-   * Return array that describes the location of the requested resource.
-   * It resembles the one from JavaScript.
+   * Resolve all necessary class instances in the given properties.
    *
    * @param  \Illuminate\Http\Request  $request
-   * @return array
-   */
-  public function getLocation(Request $request): array
-  {
-    return [
-      'href' => $request->fullUrl(),
-      'host' => $request->getHost() . ':' . $request->getPort(),
-      'hostname' => $request->getHost(),
-      'origin' =>
-        $request->getScheme() .
-        '://' .
-        $request->getHost() .
-        ':' .
-        $request->getPort(),
-      'pathname' => $request->getRequestUri(),
-      'port' => '' . $request->getPort(),
-      'protocol' => $request->getScheme() . ':',
-      'search' => $request->getQueryString()
-        ? '?' . $request->getQueryString()
-        : '',
-      'hash' => '',
-    ];
-  }
-
-  /**
-   * Resolve all necessary class instances in the given props.
-   *
-   * @param  \Illuminate\Http\Request  $request
-   * @param  Collection  $props
+   * @param  Collection  $properties
    * @return Collection
    */
   public function resolvePropertyInstances(
     Request $request,
-    Collection $props
+    Collection $properties
   ): Collection {
-    return $props->map(function ($value) use ($request) {
+    return $properties->map(function ($value) use ($request) {
       if ($value instanceof Closure) {
         $value = App::call($value);
       }
