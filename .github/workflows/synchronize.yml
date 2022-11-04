@@ -32,15 +32,15 @@ jobs:
       - name: Copy Laravel package
         run: mv -v /tmp/framework/packages/laravel/* .
 
+      - name: Read version
+        run: |
+          version=$(jq -r ".version" package.json)
+          echo "VERSION=${version}" >> $GITHUB_ENV
+
       - name: Delete obsolete files
         run: |
           rm package.json
           rm release.config.cjs
-
-      - name: Read version
-        run: |
-          version=$(jq -r ".version" composer.json)
-          echo "VERSION=${version}" >> $GITHUB_ENV
 
       - name: Add changes
         run: git add -A
