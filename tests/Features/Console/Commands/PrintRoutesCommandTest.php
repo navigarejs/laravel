@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\File;
-use Navigare\Console\Commands\ExportRoutesCommand;
+use Navigare\Console\Commands\PrintRoutesCommand;
 use function Spatie\Snapshots\assertMatchesSnapshot;
 
 it('exposes the routes to the command line', function () {
@@ -10,7 +10,7 @@ it('exposes the routes to the command line', function () {
     ->get('posts/{post}/comments', $this->noop())
     ->name('postComments.index');
 
-  $output = app(ExportRoutesCommand::class)->getRoutesAsJSON();
+  $output = app(PrintRoutesCommand::class)->getRoutesAsJSON();
 
   this()
     ->artisan('navigare:routes')
@@ -30,7 +30,7 @@ it('exposes the filtered route to the command line', function () {
     ->name('articlesComments.index');
 
   $name = 'articlesComments.index';
-  $output = app(ExportRoutesCommand::class)->getRoutesAsJSON($name);
+  $output = app(PrintRoutesCommand::class)->getRoutesAsJSON($name);
 
   this()
     ->artisan("navigare:routes --name $name")
@@ -45,7 +45,7 @@ it('writes the routes to the file system if requested', function () {
     ->shouldReceive('put')
     ->withArgs([
       'routes.json',
-      app(ExportRoutesCommand::class)->getRoutesAsJSON(),
+      app(PrintRoutesCommand::class)->getRoutesAsJSON(),
     ]);
 
   this()

@@ -1,6 +1,6 @@
 <?php
 
-namespace Navigare;
+namespace Navigare\Support;
 
 use Illuminate\Support\Str;
 

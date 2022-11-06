@@ -1,6 +1,6 @@
 <?php
 
-namespace Navigare;
+namespace Navigare\View;
 
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Http\Request;

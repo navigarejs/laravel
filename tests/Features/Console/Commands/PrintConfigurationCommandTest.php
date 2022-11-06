@@ -1,11 +1,11 @@
 <?php
 
 use Illuminate\Support\Facades\File;
-use Navigare\Console\Commands\ExportConfigurationCommand;
+use Navigare\Console\Commands\PrintConfigurationCommand;
 use function Spatie\Snapshots\assertMatchesSnapshot;
 
 it('exposes the configuration contents to the command line', function () {
-  $output = app(ExportConfigurationCommand::class)->getConfigurationAsJson();
+  $output = app(PrintConfigurationCommand::class)->getConfigurationAsJson();
 
   this()
     ->artisan('navigare:config')
@@ -22,7 +22,7 @@ it(
       ->shouldReceive('put')
       ->withArgs([
         'vite.config.json',
-        app(ExportConfigurationCommand::class)->getConfigurationAsJson(),
+        app(PrintConfigurationCommand::class)->getConfigurationAsJson(),
       ]);
 
     this()

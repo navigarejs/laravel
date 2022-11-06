@@ -1,10 +1,12 @@
 <?php
 
-namespace Navigare;
+namespace Navigare\View;
 
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Navigare\Configuration;
+use Navigare\Router\RawRoute;
 
 class Page implements Arrayable
 {
@@ -32,7 +34,7 @@ class Page implements Arrayable
    */
   public function mergeFragments(Collection $fragments): self
   {
-    $this->fragments->merge($fragments);
+    $this->fragments = $this->fragments->merge($fragments);
 
     return $this;
   }
@@ -40,17 +42,26 @@ class Page implements Arrayable
   /**
    * Get the instance as an array.
    *
+   * @param bool $ssr
+   * @param ?Configuration $configuration
    * @return array
    */
-  public function toArray()
-  {
+  public function toArray(
+    bool $ssr = false,
+    ?Configuration $configuration = null
+  ) {
     return [
-      'fragments' => $this->fragments->toArray(),
+      'fragments' => $this->fragments->map(function ($fragment) use (
+        $ssr,
+        $configuration
+      ) {
+        return $fragment->toArray($ssr, $configuration);
+      }),
       'properties' => $this->properties->toArray(),
       'defaults' => $this->defaults->toArray(),
       'layout' => $this->layout,
       'version' => $this->version,
-      'rawRoute' => $this->rawRoute->toArray(),
+      'rawRoute' => $this->rawRoute->toArray($ssr),
       'location' => $this->location->toArray(),
       'parameters' => $this->parameters->toArray(),
       'csrf' => $this->csrf,

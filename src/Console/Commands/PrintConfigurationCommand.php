@@ -5,7 +5,7 @@ namespace Navigare\Console\Commands;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
 
-class ExportConfigurationCommand extends Command
+class PrintConfigurationCommand extends Command
 {
   /**
    * The name and signature of the console command.
@@ -19,7 +19,7 @@ class ExportConfigurationCommand extends Command
    *
    * @var string
    */
-  public $description = 'Prints the Navigare configuration.';
+  public $description = 'Prints the Navigare configuration';
 
   /**
    * Indicates whether the command should be shown in the Artisan command list.
@@ -28,6 +28,11 @@ class ExportConfigurationCommand extends Command
    */
   public $hidden = true;
 
+  /**
+   * Execute the console command.
+   *
+   * @return int
+   */
   public function handle()
   {
     $config = $this->getConfigurationAsJSON();
@@ -37,10 +42,12 @@ class ExportConfigurationCommand extends Command
 
       $this->info("Configuration file written to <comment>${path}</comment>.");
 
-      return;
+      return self::SUCCESS;
     }
 
     $this->output->write($config);
+
+    return self::SUCCESS;
   }
 
   public function getConfigurationAsJson()
