@@ -9,11 +9,11 @@ use Navigare\Configuration;
 use Navigare\Navigare;
 use Navigare\Router\RawRoute;
 
-class PageFragment implements Arrayable
+class Fragment implements Arrayable
 {
   public function __construct(
     public string $name,
-    public PageComponent $component,
+    public Component $component,
     public Collection $properties,
     public ?RawRoute $rawRoute = null,
     public ?Location $location = null,
@@ -53,7 +53,7 @@ class PageFragment implements Arrayable
     return [
       'name' => $this->name,
       'component' => $this->component->toArray($ssr, $configuration),
-      'properties' => $this->properties->toArray(),
+      'properties' => (object) $this->properties->toArray(),
       /*'defaults' => $this->defaults?->toArray(),
       'parameters' => $this->parameters?->toArray(),
       'rawRoute' => $this->rawRoute?->toArray($ssr, $configuration),

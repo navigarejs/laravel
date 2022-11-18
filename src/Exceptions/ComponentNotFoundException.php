@@ -4,7 +4,7 @@ namespace Navigare\Exceptions;
 
 use Navigare\Vite\Manifest;
 
-final class PageComponentNotFoundException extends Exception
+final class ComponentNotFoundException extends Exception
 {
   public function __construct(
     protected string $name,

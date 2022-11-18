@@ -6,12 +6,12 @@ use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 use Navigare\Configuration;
-use Navigare\Exceptions\PageComponentNotFoundException;
-use Navigare\Exceptions\PageComponentNotPublicException;
+use Navigare\Exceptions\ComponentNotFoundException;
+use Navigare\Exceptions\ComponentNotPublicException;
 use Navigare\Navigare;
 use Navigare\Support\Filesystem;
 
-class PageComponent implements Arrayable
+class Component implements Arrayable
 {
   public function __construct(public string $id, public string $path)
   {
@@ -22,7 +22,7 @@ class PageComponent implements Arrayable
    *
    * @param string $name
    * @param Configuration $configuration
-   * @return PageComponent
+   * @return Component
    */
   public static function fromName(
     string $name,
@@ -52,10 +52,10 @@ class PageComponent implements Arrayable
       ])
     );
     if (!in_array(realpath($absolutePath), $files)) {
-      throw new PageComponentNotFoundException($name, $absolutePath);
+      throw new ComponentNotFoundException($name, $absolutePath);
     }
 
-    return new PageComponent(id: $id, path: $path);
+    return new Component(id: $id, path: $path);
   }
 
   /**
@@ -72,7 +72,7 @@ class PageComponent implements Arrayable
       $path = $manifest->resolve($this->path);
 
       if (!$path) {
-        throw new PageComponentNotFoundException(
+        throw new ComponentNotFoundException(
           $this->name,
           $this->path,
           $manifest
@@ -98,7 +98,7 @@ class PageComponent implements Arrayable
       $path = $manifest->resolve($this->path);
 
       if (!$path) {
-        throw new PageComponentNotFoundException(
+        throw new ComponentNotFoundException(
           $this->name,
           $this->path,
           $manifest
