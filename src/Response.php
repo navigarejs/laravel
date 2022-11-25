@@ -102,7 +102,7 @@ class Response implements Responsable
   public function withFragment(
     string $fragmentName,
     string $componentName,
-    array|Arrayable $properties
+    array|Arrayable $properties = []
   ): self {
     $this->fragments[$fragmentName] = new Fragment(
       name: $fragmentName,
@@ -111,6 +111,26 @@ class Response implements Responsable
     );
 
     return $this;
+  }
+
+  /**
+   * Add fallback fragment to response.
+   *
+   * @param  string  $fragmentName
+   * @param  string  $component
+   * @param  array|Arrayable  $properties
+   * @return self
+   */
+  public function withFallbackFragment(
+    string $fragmentName,
+    string $componentName,
+    array|Arrayable $properties = []
+  ): self {
+    if (isset($this->fragments[$fragmentName])) {
+      return $this;
+    }
+
+    return $this->withFragment($fragmentName, $componentName, $properties);
   }
 
   /**
@@ -307,13 +327,22 @@ class Response implements Responsable
       isset($arguments[0]) &&
       is_string($arguments[0])
     ) {
-      $this->withFragment(
-        Str::camel(Str::after($method, 'with')),
-        $arguments[0],
-        $arguments[1] ?? []
-      );
+      $fragmentName = $arguments[0];
+      $properties = $arguments[1];
 
-      return $this;
+      if (Str::startsWith($method, 'withFallback')) {
+        return $this->withFallbackFragment(
+          Str::camel(Str::after($method, 'withFallback')),
+          $fragmentName,
+          $properties
+        );
+      }
+
+      return $this->withFragment(
+        Str::camel(Str::after($method, 'with')),
+        $fragmentName,
+        $properties
+      );
     }
 
     trigger_error(
